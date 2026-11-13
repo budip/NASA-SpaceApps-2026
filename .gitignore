@@ -1,0 +1,31 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Local runtime data
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.log
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Editors and builds
+.idea/
+.vscode/
+build/
+dist/
+.pio/
+.pioenvs/
