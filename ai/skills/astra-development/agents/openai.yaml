@@ -1,4 +1,4 @@
 interface:
   display_name: "ASTRA Development"
-  short_description: "Build and verify ASTRA offline safety features"
-  default_prompt: "Use $astra-development to implement the next ASTRA milestone safely."
+  short_description: "Develop ASTRA's reliable offline prototype"
+  default_prompt: "Use $astra-development to make a small, verified ASTRA improvement while preserving its offline behavior and frozen core contract."
