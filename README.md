@@ -288,6 +288,7 @@ For an end-to-end rehearsal:
 
 Additional references:
 
+- [ASTRA 2026 project presentation](presentation/ASTRA-2026-Final.pptx)
 - [Swagger and API guide](team/SWAGGER_API_GUIDE.md)
 - [Hardware bill of materials](BOM.md)
 - [Milestones and activity log](MILESTONES.md)
