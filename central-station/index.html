@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#07111f">
+    <title>ASTRA Mission Control</title>
+    <link rel="stylesheet" href="/static/dashboard.css">
+    <script src="/static/dashboard.js" defer></script>
+  </head>
+  <body>
+    <div class="starfield" aria-hidden="true"></div>
+    <header class="topbar">
+      <a class="brand" href="/dashboard" aria-label="ASTRA Mission Control home">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        <span>
+          <strong>ASTRA</strong>
+          <small>MISSION CONTROL</small>
+        </span>
+      </a>
+      <div class="topbar-meta">
+        <span id="connection-pill" class="pill pill-connecting">
+          <span class="pulse-dot" aria-hidden="true"></span>
+          <span id="connection-label">Connecting</span>
+        </span>
+        <time id="station-clock" datetime="">--:--:--</time>
+      </div>
+    </header>
+
+    <main class="dashboard-shell">
+      <section class="status-grid" aria-label="Current mission status">
+        <article id="status-card" class="panel status-card" data-status="OFFLINE">
+          <div class="section-heading">
+            <span>CREW ENVIRONMENT</span>
+            <span id="source-badge" class="source-badge">NO DATA</span>
+          </div>
+          <div class="status-main">
+            <div id="status-symbol" class="status-symbol" aria-hidden="true">×</div>
+            <div>
+              <p id="status-label" class="status-label" aria-live="polite">OFFLINE</p>
+              <p id="status-summary" class="status-summary">
+                Waiting for the backpack computer.
+              </p>
+            </div>
+          </div>
+          <div class="status-footer">
+            <span>ANOMALY SCORE <strong id="score-value">--</strong></span>
+            <span>LAST SAMPLE <strong id="sample-age">--</strong></span>
+          </div>
+        </article>
+
+        <article class="panel link-card">
+          <div class="section-heading">
+            <span>LOCAL SYSTEM PATH</span>
+            <span>PRIVATE LAN</span>
+          </div>
+          <div class="system-path" aria-label="Sense HAT to Pi to local network to clients">
+            <div id="node-sensor" class="system-node">
+              <span class="node-icon" aria-hidden="true">◎</span>
+              <strong>SENSOR</strong>
+              <small>Sense HAT</small>
+            </div>
+            <span class="path-line" aria-hidden="true"></span>
+            <div id="node-pi" class="system-node">
+              <span class="node-icon" aria-hidden="true">▣</span>
+              <strong>BACKPACK</strong>
+              <small>Pi service</small>
+            </div>
+            <span class="path-line" aria-hidden="true"></span>
+            <div id="node-link" class="system-node">
+              <span class="node-icon" aria-hidden="true">⌁</span>
+              <strong>LOCAL LINK</strong>
+              <small>2.4 GHz</small>
+            </div>
+            <span class="path-line" aria-hidden="true"></span>
+            <div class="system-node endpoint-node">
+              <span class="node-icon" aria-hidden="true">◫</span>
+              <strong>CLIENTS</strong>
+              <small>CYD + station</small>
+            </div>
+          </div>
+          <p class="path-note">
+            The endpoint confirms that the wearable feed is available; it does
+            not claim the CYD has received the latest packet.
+          </p>
+        </article>
+      </section>
+
+      <section class="metric-grid" aria-label="Current sensor readings">
+        <article class="panel metric-card">
+          <div class="metric-icon temperature-icon" aria-hidden="true">°</div>
+          <div>
+            <span class="metric-label">TEMPERATURE</span>
+            <p><strong id="temperature-value">--</strong><span> °C</span></p>
+            <small id="temperature-change">Awaiting sample</small>
+          </div>
+        </article>
+        <article class="panel metric-card">
+          <div class="metric-icon humidity-icon" aria-hidden="true">◇</div>
+          <div>
+            <span class="metric-label">HUMIDITY</span>
+            <p><strong id="humidity-value">--</strong><span> %</span></p>
+            <small id="humidity-change">Awaiting sample</small>
+          </div>
+        </article>
+        <article class="panel metric-card">
+          <div class="metric-icon pressure-icon" aria-hidden="true">↕</div>
+          <div>
+            <span class="metric-label">PRESSURE</span>
+            <p><strong id="pressure-value">--</strong><span> hPa</span></p>
+            <small id="pressure-change">Awaiting sample</small>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel imu-panel" aria-label="Motion and orientation readings">
+        <div class="panel-title-row">
+          <div>
+            <span class="eyebrow">SENSE HAT IMU</span>
+            <h2>Motion and orientation</h2>
+          </div>
+          <span id="imu-availability" class="history-count">AWAITING SAMPLE</span>
+        </div>
+        <div class="imu-grid">
+          <article class="imu-card">
+            <div class="imu-card-heading">
+              <span class="imu-symbol" aria-hidden="true">A</span>
+              <div><strong>ACCELERATION</strong><small>g</small></div>
+            </div>
+            <dl class="axis-list">
+              <div><dt>X</dt><dd id="acceleration-x">--</dd></div>
+              <div><dt>Y</dt><dd id="acceleration-y">--</dd></div>
+              <div><dt>Z</dt><dd id="acceleration-z">--</dd></div>
+            </dl>
+          </article>
+          <article class="imu-card">
+            <div class="imu-card-heading">
+              <span class="imu-symbol" aria-hidden="true">G</span>
+              <div><strong>GYROSCOPE</strong><small>rad/s</small></div>
+            </div>
+            <dl class="axis-list">
+              <div><dt>X</dt><dd id="gyroscope-x">--</dd></div>
+              <div><dt>Y</dt><dd id="gyroscope-y">--</dd></div>
+              <div><dt>Z</dt><dd id="gyroscope-z">--</dd></div>
+            </dl>
+          </article>
+          <article class="imu-card">
+            <div class="imu-card-heading">
+              <span class="imu-symbol" aria-hidden="true">M</span>
+              <div><strong>MAGNETIC FIELD</strong><small>µT</small></div>
+            </div>
+            <dl class="axis-list">
+              <div><dt>X</dt><dd id="magnetic-x">--</dd></div>
+              <div><dt>Y</dt><dd id="magnetic-y">--</dd></div>
+              <div><dt>Z</dt><dd id="magnetic-z">--</dd></div>
+            </dl>
+          </article>
+          <article class="imu-card">
+            <div class="imu-card-heading">
+              <span class="imu-symbol" aria-hidden="true">O</span>
+              <div><strong>ORIENTATION</strong><small>degrees</small></div>
+            </div>
+            <dl class="axis-list orientation-list">
+              <div><dt>PITCH</dt><dd id="orientation-pitch">--</dd></div>
+              <div><dt>ROLL</dt><dd id="orientation-roll">--</dd></div>
+              <div><dt>YAW</dt><dd id="orientation-yaw">--</dd></div>
+            </dl>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel biometrics-panel" aria-label="Simulated crew biometrics">
+        <div class="panel-title-row">
+          <div>
+            <span class="eyebrow">CREW BIOMETRICS</span>
+            <h2>Health telemetry</h2>
+          </div>
+          <span id="biometric-source" class="simulation-badge">SIMULATED</span>
+        </div>
+        <div class="biometric-grid">
+          <article class="biometric-card">
+            <span class="biometric-label">HEART RATE</span>
+            <p><strong id="heart-rate-value">--</strong><span> bpm</span></p>
+          </article>
+          <article class="biometric-card">
+            <span class="biometric-label">BLOOD PRESSURE</span>
+            <p><strong id="blood-pressure-value">--/--</strong><span> mmHg</span></p>
+          </article>
+          <article class="biometric-card">
+            <span class="biometric-label">OXYGEN SATURATION</span>
+            <p><strong id="oxygen-saturation-value">--</strong><span> %</span></p>
+          </article>
+          <article class="biometric-card">
+            <span class="biometric-label">BODY TEMPERATURE</span>
+            <p><strong id="body-temperature-value">--</strong><span> °C</span></p>
+          </article>
+        </div>
+        <p class="simulation-note">
+          Demo-generated values—not measured by the Sense HAT and not medical data.
+        </p>
+      </section>
+
+      <section id="task-panel" class="panel task-panel" data-priority="INFO" aria-label="Simulated mission tasks">
+        <div class="section-heading">
+          <span>MISSION TASKS</span>
+          <div class="task-heading-meta">
+            <span id="task-count">0 TASKS</span>
+            <span id="task-source" class="simulation-badge">SIMULATED</span>
+          </div>
+        </div>
+        <ol id="task-list" class="task-list">
+          <li class="task-empty">Waiting for simulated mission tasks.</li>
+        </ol>
+      </section>
+
+      <section class="panel messaging-panel" aria-labelledby="messaging-title">
+        <div class="panel-title-row">
+          <div>
+            <span class="eyebrow">CREW COMMUNICATIONS</span>
+            <h2 id="messaging-title">Send to wearable</h2>
+          </div>
+          <span class="message-link-badge">PI QUEUED DELIVERY</span>
+        </div>
+        <div class="messaging-layout">
+          <form id="message-form" class="message-form">
+            <div class="message-fields">
+              <label>
+                <span>ASTRONAUT</span>
+                <select id="message-recipient" name="recipient_id" required>
+                  <option value="">Loading crew…</option>
+                </select>
+              </label>
+              <label>
+                <span>PRIORITY</span>
+                <select id="message-priority" name="priority">
+                  <option value="INFO">Info</option>
+                  <option value="ADVISORY">Advisory</option>
+                  <option value="CAUTION">Caution</option>
+                  <option value="ALERT">Alert</option>
+                </select>
+              </label>
+            </div>
+            <label class="message-text-field">
+              <span>MESSAGE</span>
+              <textarea
+                id="message-text"
+                name="text"
+                maxlength="240"
+                rows="4"
+                placeholder="Type a concise instruction for the selected astronaut."
+                required
+              ></textarea>
+            </label>
+            <div class="message-actions">
+              <span id="message-count">0 / 240</span>
+              <button id="message-send" type="submit">SEND MESSAGE</button>
+            </div>
+            <p id="message-feedback" class="message-feedback" aria-live="polite">
+              The Pi stores each message until the selected wearable acknowledges it.
+            </p>
+          </form>
+          <div class="message-outbox">
+            <div class="message-outbox-heading">
+              <strong>RECENT OUTBOX</strong>
+              <span id="message-outbox-count">0 messages</span>
+            </div>
+            <ol id="message-outbox-list" class="message-list">
+              <li class="message-empty">No messages sent during this mission.</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel trend-panel">
+          <div class="panel-title-row">
+            <div>
+              <span class="eyebrow">SENSOR HISTORY</span>
+              <h1>Environmental trend</h1>
+            </div>
+            <div class="trend-tabs" role="group" aria-label="Trend sensor">
+              <button class="trend-tab active" type="button" data-sensor="temperature_c">TEMP</button>
+              <button class="trend-tab" type="button" data-sensor="humidity_pct">HUM</button>
+              <button class="trend-tab" type="button" data-sensor="pressure_hpa">PRESS</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <svg id="trend-chart" viewBox="0 0 820 280" role="img" aria-labelledby="chart-title chart-description">
+              <title id="chart-title">Environmental sensor history</title>
+              <desc id="chart-description">Waiting for sensor history.</desc>
+            </svg>
+            <div id="chart-empty" class="chart-empty">Collecting trend data…</div>
+          </div>
+          <div class="chart-footer">
+            <span id="chart-range">LAST -- MIN</span>
+            <span id="chart-stat">--</span>
+          </div>
+        </article>
+
+        <aside class="side-stack" aria-label="Backpack diagnostics">
+          <article class="panel diagnostics-panel">
+            <span class="eyebrow">BACKPACK SERVICE</span>
+            <h2>Diagnostics</h2>
+            <dl class="diagnostic-list">
+              <div><dt>Service</dt><dd id="health-status">CONNECTING</dd></div>
+              <div><dt>Version</dt><dd id="service-version">--</dd></div>
+              <div><dt>Sensor mode</dt><dd id="sensor-mode">--</dd></div>
+              <div><dt>Baseline</dt><dd id="baseline-size">-- samples</dd></div>
+              <div><dt>Failures</dt><dd id="failure-count">--</dd></div>
+            </dl>
+          </article>
+
+          <article class="panel legend-panel">
+            <span class="eyebrow">STATE LEGEND</span>
+            <ul>
+              <li><span class="legend-mark learning"></span><span><strong>LEARNING</strong><small>Building local baseline</small></span></li>
+              <li><span class="legend-mark normal"></span><span><strong>NORMAL</strong><small>Within baseline</small></span></li>
+              <li><span class="legend-mark caution"></span><span><strong>CAUTION</strong><small>Change detected</small></span></li>
+              <li><span class="legend-mark alert"></span><span><strong>ALERT</strong><small>Strong deviation</small></span></li>
+              <li><span class="legend-mark offline"></span><span><strong>OFFLINE</strong><small>Backpack unavailable</small></span></li>
+            </ul>
+          </article>
+        </aside>
+      </section>
+
+      <section class="panel samples-panel">
+        <div class="panel-title-row">
+          <div>
+            <span class="eyebrow">RECENT TELEMETRY</span>
+            <h2>Latest samples</h2>
+          </div>
+          <span id="history-count" class="history-count">0 records</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>State</th>
+                <th>Temperature</th>
+                <th>Humidity</th>
+                <th>Pressure</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody id="sample-rows">
+              <tr><td colspan="6" class="empty-row">Waiting for telemetry…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>ASTRA OFFLINE SAFETY PROTOTYPE</span>
+      <span>Not medical or flight-certified</span>
+    </footer>
+    <noscript>This dashboard requires JavaScript to request local Pi telemetry.</noscript>
+  </body>
+</html>

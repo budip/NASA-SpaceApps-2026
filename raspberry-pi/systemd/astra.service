@@ -1,0 +1,23 @@
+[Unit]
+Description=ASTRA Raspberry Pi sensor API
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/Documents/NASA-SpaceApps-2026/raspberry-pi
+EnvironmentFile=/home/pi/Documents/NASA-SpaceApps-2026/raspberry-pi/.env
+ExecStart=/home/pi/Documents/NASA-SpaceApps-2026/raspberry-pi/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=5
+TimeoutStartSec=90
+TimeoutStopSec=20
+KillSignal=SIGINT
+NoNewPrivileges=true
+PrivateTmp=true
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

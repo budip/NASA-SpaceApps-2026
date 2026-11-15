@@ -8,6 +8,9 @@ This README is the team's shared plan. The individual guides explain each person
 - [Alex — Experience Designer, Tester, and Demo Guide](team/ALEX.md)
 - [Ralph — CYD Wrist Terminal Developer](team/RALPH.md)
 - [Tyeki — Backpack Hardware and Sensor Lead](team/TYEKI.md)
+- [Milestones and activity log](MILESTONES.md)
+- [Raspberry Pi connection and deployment notes](RASPBERRY_PI_SSH.md)
+- [Teammate Swagger/API guide](team/SWAGGER_API_GUIDE.md)
 
 ## The mission
 
@@ -17,7 +20,8 @@ The weekend goal is a reliable end-to-end demonstration:
 2. The Raspberry Pi records readings in SQLite.
 3. The local Python/FastAPI service computes a baseline and flags anomalies.
 4. The CYD wrist terminal requests a compact status from the Pi and displays `NORMAL`, `CAUTION`, `ALERT`, or `OFFLINE`.
-5. The system continues to collect, analyze, store, and explain basic alerts without internet access.
+5. A laptop on the private network opens the Pi-hosted central-station dashboard for trends and diagnostics.
+6. The system continues to collect, analyze, store, display, and explain basic alerts without internet access.
 
 The success story is: **ASTRA notices a change, warns the crew member, explains what changed, and keeps working when the internet disappears.**
 
@@ -54,7 +58,11 @@ The stable minimum API contract is:
   "sensors": {
     "temperature_c": 22.4,
     "humidity_pct": 41.0,
-    "pressure_hpa": 1012.7
+    "pressure_hpa": 1012.7,
+    "acceleration_g": {"x": 0.01, "y": 0.02, "z": 1.0},
+    "gyroscope_rps": {"x": 0.01, "y": 0.0, "z": -0.01},
+    "magnetic_uT": {"x": 12.1, "y": -4.2, "z": 31.8},
+    "orientation_deg": {"pitch": 2.0, "roll": 1.0, "yaw": 180.0}
   },
   "source": "live"
 }
@@ -67,6 +75,32 @@ Rules for this interface:
 - `summary` always has a local fallback; it cannot depend on OpenAI.
 - `source` is `live`, `cached`, or `simulated`, so the demo never mislabels sample data as live data.
 - Budi owns changes to field names. Ralph and Alex review any display-impacting change.
+
+The current service extends this minimum contract without renaming or removing
+any of its fields. It adds filtered motion `features`, data `quality`, explicitly
+simulated `biometrics`, and a `tasks` array selected from a separate 200-message
+catalog. The biometric demo values are randomized and are not real medical
+measurements. See the [Swagger/API guide](team/SWAGGER_API_GUIDE.md) for the
+complete current schema and examples.
+
+Version `0.5.0` also adds explicitly simulated `suit_pressure` and
+`suit_temperature` objects. These do not replace `sensors.pressure_hpa` or
+`sensors.temperature_c`: the Sense HAT fields remain ambient backpack
+measurements. The suit objects carry their own source, thresholds, status, and
+prototype-limit flags. Simulated heart rate also includes a deterministic
+status with a 140 bpm critical-high threshold.
+
+Central Station can also queue a message for an individual astronaut. The Pi
+stores it until that astronaut's configured wearable polls and acknowledges it;
+the dashboard reports `QUEUED` or `DELIVERED`. Messaging stays on the private
+LAN and is documented in the same Swagger guide.
+
+Clients may optionally call `POST /api/v1/chat` for a short, single-turn reply
+from Gemma 3 running entirely on the Pi. The endpoint is deliberately bounded
+and asynchronous; it never replaces deterministic sensing or alert logic.
+Version `0.6.0` adds deterministic prompt guardrails, output validation, safe
+fallback text, a server-side temperature cap, a bounded context, and
+`GET /api/v1/chat/health` for demo readiness checks.
 
 ## Hackathon weekend timeline
 
@@ -91,6 +125,7 @@ The project is demo-ready when all of these are true:
 
 - [ ] A new teammate can start the Pi and CYD from written instructions.
 - [ ] The live Sense HAT reading appears on the wrist terminal.
+- [ ] A laptop on the private LAN can open the dashboard and monitor current and recent readings.
 - [ ] The Pi stores timestamped readings in SQLite.
 - [ ] The system visibly distinguishes learning, normal, anomalous, and disconnected states.
 - [ ] A safe, repeatable stimulus creates an anomaly during rehearsal.
@@ -121,3 +156,19 @@ Every handoff should contain five things:
 5. **Proof:** a screen, log line, photo, or 30-second demonstration.
 
 The receiver repeats the run steps before accepting the handoff. If the repeat fails, both owners stay on the interface until it works or Budi changes the scope.
+
+## Starter projects
+
+The repository includes two runnable starter projects:
+
+- [`raspberry-pi/`](raspberry-pi/) contains the FastAPI service, simulated and
+  Sense HAT sensor adapters, local baseline/anomaly logic, and SQLite storage.
+- [`wearable/`](wearable/) contains PlatformIO firmware for an ESP32-2432S028R-style CYD
+  that polls the Pi and displays the five ASTRA states.
+- [`central-station/`](central-station/) contains the buildless laptop dashboard
+  served by the Pi over the private local network.
+
+Start the Pi service in simulated mode first, then point the CYD configuration
+at the Pi's local IP address. Each project README contains exact setup and test
+commands. Confirm the exact CYD revision and display pins before connecting the
+hardware.

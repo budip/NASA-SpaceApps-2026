@@ -1,0 +1,201 @@
+## ASTRA simulated task catalog: priority|category|message
+ALERT|navigation|Return to the primary station immediately and confirm arrival.
+CAUTION|navigation|Hold position until the navigation corridor is cleared.
+ADVISORY|navigation|Proceed to waypoint Alpha and report visual conditions.
+ADVISORY|navigation|Proceed to waypoint Bravo using the marked safe route.
+INFO|navigation|Verify the route to the nearest shelter before continuing.
+CAUTION|navigation|Avoid the eastern access path until further notice.
+ADVISORY|navigation|Recalculate the return route using the latest local map.
+INFO|navigation|Confirm the current waypoint against the mission plan.
+CAUTION|navigation|Navigation drift detected; stop and re-establish position.
+ADVISORY|navigation|Move to the communications relay point for the next check-in.
+INFO|navigation|Mark the current position as a reference waypoint.
+CAUTION|navigation|Do not enter the unverified surface sector.
+ADVISORY|navigation|Return to the previous waypoint and await instructions.
+INFO|navigation|Perform a compass and orientation cross-check.
+CAUTION|navigation|Route obstruction reported ahead; use the alternate corridor.
+ADVISORY|navigation|Approach the station through the north service entrance.
+INFO|navigation|Confirm distance and bearing to the backpack recovery point.
+CAUTION|navigation|Pause transit while the local hazard map refreshes.
+ADVISORY|navigation|Rendezvous with the crew at waypoint Delta.
+INFO|navigation|Review the planned return path before the next movement window.
+ALERT|weather|Tornado warning in the surface operations sector; return to shelter.
+ALERT|weather|Lightning activity is approaching; suspend exposed operations.
+CAUTION|weather|High winds detected near the ridge; secure loose equipment.
+CAUTION|weather|Dust conditions are reducing visibility; use the marked return path.
+CAUTION|weather|Heavy rain is expected; move electronics into protected storage.
+ADVISORY|weather|Low visibility reported; maintain close crew spacing.
+CAUTION|weather|Hail risk detected; postpone outdoor equipment inspection.
+ADVISORY|weather|Temperature is dropping; review cold-weather exposure limits.
+ADVISORY|weather|Heat load is increasing; schedule a hydration and cooling break.
+CAUTION|weather|Flooding reported near the lower access route; avoid that area.
+INFO|weather|Weather window remains stable for the next scheduled task.
+CAUTION|weather|Strong crosswinds may affect antenna alignment.
+ADVISORY|weather|Cloud cover is increasing; verify lighting before transit.
+CAUTION|weather|Icing conditions are possible on exposed surfaces.
+ADVISORY|weather|Barometric pressure is changing; monitor the local forecast.
+ALERT|weather|Severe weather alert received; return to the primary station.
+INFO|weather|Record a local weather observation at the current waypoint.
+CAUTION|weather|Airborne debris reported; remain inside the protected zone.
+ADVISORY|weather|A brief wind lull is available for equipment recovery.
+INFO|weather|Compare local conditions with the station weather report.
+ALERT|station|Return to station and report to the operations desk.
+CAUTION|station|Station access is restricted; use the secondary entrance.
+ADVISORY|station|Complete the station perimeter check before the next shift.
+INFO|station|Confirm emergency lighting is operational in the main corridor.
+ADVISORY|station|Inspect the station airlock indicator panel.
+CAUTION|station|Keep the service bay clear while diagnostics are running.
+INFO|station|Verify the station clock against the mission timeline.
+ADVISORY|station|Check that the local dashboard is receiving fresh telemetry.
+CAUTION|station|Station power reserve is below the preferred demo margin.
+INFO|station|Confirm the backup communication device is charged.
+ADVISORY|station|Review the station evacuation route with the crew.
+INFO|station|Record the station temperature and humidity snapshot.
+CAUTION|station|A maintenance zone is active near the equipment rack.
+ADVISORY|station|Inspect the station network link before the next test.
+INFO|station|Confirm the medical kit location and seal status.
+CAUTION|station|Keep the north corridor clear for equipment movement.
+ADVISORY|station|Check the station entry log for the latest crew arrival.
+INFO|station|Verify that the recovery tools are stored in their assigned bay.
+CAUTION|station|Station door sensor requires a visual confirmation.
+ADVISORY|station|Prepare the operations desk for the next telemetry review.
+ALERT|equipment|Stop using the affected power unit and switch to the backup.
+CAUTION|equipment|Inspect the backpack power cable for a loose connection.
+ADVISORY|equipment|Check the Sense HAT mounting screws and spacers.
+INFO|equipment|Verify the spare battery inventory.
+CAUTION|equipment|Undervoltage was reported; reduce nonessential compute load.
+ADVISORY|equipment|Confirm the wearable display remains securely mounted.
+INFO|equipment|Inspect the sensor enclosure ventilation openings.
+CAUTION|equipment|Equipment temperature is elevated; improve airflow.
+ADVISORY|equipment|Run a visual check of the I2C header connection.
+INFO|equipment|Verify the charging cable label and storage location.
+CAUTION|equipment|Do not reconnect damaged equipment until it is inspected.
+ADVISORY|equipment|Compare the backup sensor reading with the primary unit.
+INFO|equipment|Record the current battery percentage in the equipment log.
+CAUTION|equipment|A loose connector may be affecting telemetry quality.
+ADVISORY|equipment|Clean the sensor opening with the approved dry method.
+INFO|equipment|Confirm the toolkit is complete before leaving the station.
+CAUTION|equipment|Secure the loose antenna before continuing movement.
+ADVISORY|equipment|Test the backup display before the next rehearsal.
+INFO|equipment|Check that all device labels remain readable.
+ADVISORY|equipment|Place the spare power bank in the assigned recovery pouch.
+ALERT|communications|Communication link lost; return to the last confirmed relay point.
+CAUTION|communications|Signal quality is degraded; shorten the distance to the station.
+ADVISORY|communications|Perform a radio check on the backup channel.
+INFO|communications|Send a routine status acknowledgement to mission control.
+CAUTION|communications|Telemetry packets are delayed; avoid relying on stale values.
+ADVISORY|communications|Reorient the local antenna toward the station.
+INFO|communications|Confirm the current network address in the connection log.
+CAUTION|communications|Do not transmit sensitive credentials over the demo channel.
+ADVISORY|communications|Verify Swagger access from the team laptop.
+INFO|communications|Confirm the dashboard and wearable show the same state.
+CAUTION|communications|Multiple clients are polling rapidly; monitor service load.
+ADVISORY|communications|Switch to the secondary communication path for testing.
+INFO|communications|Record the latest successful check-in time.
+CAUTION|communications|The relay point is unavailable; use the alternate location.
+ADVISORY|communications|Send the current waypoint and equipment status.
+INFO|communications|Confirm that the local API remains reachable without internet.
+CAUTION|communications|A network change was detected; verify the Pi address.
+ADVISORY|communications|Repeat the last message using plain language.
+INFO|communications|Test the offline communication procedure.
+ADVISORY|communications|Confirm receipt of the next task before leaving the station.
+ALERT|crew|Crew accountability check required; report your status now.
+CAUTION|crew|A crew member missed a check-in; contact the station.
+ADVISORY|crew|Schedule a hydration break before the next field task.
+INFO|crew|Confirm every team member knows the return route.
+CAUTION|crew|Pause work if fatigue or dizziness is reported.
+ADVISORY|crew|Rotate the equipment-carrying assignment.
+INFO|crew|Review the next task and identify its owner.
+CAUTION|crew|Do not continue a two-person task with only one person present.
+ADVISORY|crew|Complete a buddy check before leaving the station.
+INFO|crew|Record the crew handoff in the mission log.
+CAUTION|crew|Reduce workload during the current heat exposure period.
+ADVISORY|crew|Confirm the presenter and backup presenter are ready.
+INFO|crew|Check that each crew member has a communication device.
+CAUTION|crew|Stop the rehearsal if any unsafe condition is observed.
+ADVISORY|crew|Review the emergency stop phrase with the team.
+INFO|crew|Confirm the next scheduled check-in time.
+CAUTION|crew|Maintain visual contact during low-visibility operations.
+ADVISORY|crew|Assign one crew member to monitor telemetry quality.
+INFO|crew|Verify that the demo operator understands the simulated labels.
+ADVISORY|crew|Take a short rest before the final rehearsal.
+ALERT|science|Suspend the sample procedure and protect the collected material.
+CAUTION|science|The sample container seal needs a visual inspection.
+ADVISORY|science|Capture a baseline sensor reading before the experiment.
+INFO|science|Record the current environmental conditions in the science log.
+CAUTION|science|Unexpected motion may have disturbed the test setup.
+ADVISORY|science|Repeat the measurement after the sensor stabilizes.
+INFO|science|Photograph the experiment configuration for documentation.
+CAUTION|science|Do not mix labeled samples from different locations.
+ADVISORY|science|Compare the filtered reading with the local raw-data buffer.
+INFO|science|Mark the sample time and waypoint.
+CAUTION|science|A quality flag is active; postpone interpretation.
+ADVISORY|science|Collect a second observation for comparison.
+INFO|science|Verify the instrument identifier in the data record.
+CAUTION|science|The experiment surface is not level; correct the setup.
+ADVISORY|science|Run the calibration check before continuing.
+INFO|science|Export the latest quality summary for review.
+CAUTION|science|Protect the sensor from direct airflow during this reading.
+ADVISORY|science|Label the current observation as live or simulated.
+INFO|science|Confirm the expected units before recording the result.
+ADVISORY|science|Review the experiment notes for missing context.
+ALERT|logistics|Critical supply item missing; return to station inventory.
+CAUTION|logistics|The planned route exceeds the current power reserve.
+ADVISORY|logistics|Move the spare battery to the forward equipment cache.
+INFO|logistics|Count the remaining water and food packages.
+CAUTION|logistics|Do not leave the recovery kit outside the station.
+ADVISORY|logistics|Prepare the next equipment bundle for handoff.
+INFO|logistics|Update the location of the spare sensor unit.
+CAUTION|logistics|The transport case is not latched; secure it now.
+ADVISORY|logistics|Confirm the return vehicle is available.
+INFO|logistics|Record the serial number of the deployed backpack.
+CAUTION|logistics|Reduce carried load before the next transit.
+ADVISORY|logistics|Stage replacement cables near the operations desk.
+INFO|logistics|Verify the inventory list against the physical kit.
+CAUTION|logistics|A required tool is outside the marked safe area.
+ADVISORY|logistics|Move the charging equipment away from the walkway.
+INFO|logistics|Confirm the storage case remains dry and ventilated.
+CAUTION|logistics|The backup power bank is below the required charge.
+ADVISORY|logistics|Prepare labels for the next sensor package.
+INFO|logistics|Log the equipment handoff time and recipient.
+ADVISORY|logistics|Return unused supplies to their assigned storage bins.
+ALERT|safety|Stop current activity and return to the designated safe zone.
+ALERT|safety|Immediate shelter action required; acknowledge this alert.
+CAUTION|safety|A trip hazard was reported near the equipment table.
+ADVISORY|safety|Inspect the work area for exposed conductors.
+INFO|safety|Confirm the fire extinguisher remains accessible.
+CAUTION|safety|Keep liquids away from the Pi and power connections.
+ADVISORY|safety|Check cable strain relief before movement.
+INFO|safety|Review the graceful shutdown procedure.
+CAUTION|safety|Do not remove power while storage activity is in progress.
+ADVISORY|safety|Verify the enclosure has adequate ventilation.
+INFO|safety|Confirm sharp edges are covered before wearing the prototype.
+CAUTION|safety|The battery pack shows an abnormal condition; stop using it.
+ADVISORY|safety|Clear the emergency access path.
+INFO|safety|Check that the activity LED has stopped before unplugging power.
+CAUTION|safety|The mounting strap requires adjustment before use.
+ADVISORY|safety|Perform a quick hazard scan before the next demonstration.
+INFO|safety|Confirm all safety limitations are stated to observers.
+CAUTION|safety|Do not use open flame or liquid as an anomaly trigger.
+ADVISORY|safety|Use the approved low-risk demo stimulus only.
+INFO|safety|Record any safety concern before resuming work.
+ALERT|eva|End the simulated EVA and return to the station airlock.
+CAUTION|eva|Pause the simulated EVA while the route is inspected.
+ADVISORY|eva|Verify tether and equipment attachment points.
+INFO|eva|Confirm the planned EVA duration with mission control.
+CAUTION|eva|Telemetry quality dropped during the EVA simulation.
+ADVISORY|eva|Move to the next marked inspection point.
+INFO|eva|Report suit-simulation equipment status.
+CAUTION|eva|Avoid the unstable terrain marker.
+ADVISORY|eva|Perform an orientation check before continuing.
+INFO|eva|Confirm the station remains within the planned return distance.
+CAUTION|eva|A rapid weather change may shorten the EVA window.
+ADVISORY|eva|Inspect the external equipment mockup.
+INFO|eva|Record the current waypoint and elapsed EVA time.
+CAUTION|eva|Stop movement while the crew regroups.
+ADVISORY|eva|Test the local communication link from the field point.
+INFO|eva|Confirm the backup return path is unobstructed.
+CAUTION|eva|A simulated suit warning requires immediate review.
+ADVISORY|eva|Collect the assigned surface observation.
+INFO|eva|Check the wearable display before leaving the waypoint.
+ADVISORY|eva|Return to the station for the scheduled debrief.

@@ -29,3 +29,6 @@ build/
 dist/
 .pio/
 .pioenvs/
+
+# CYD local credentials
+wearable/include/secrets.h
