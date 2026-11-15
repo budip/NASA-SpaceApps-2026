@@ -6,7 +6,7 @@ This README is the team's shared plan. The individual guides explain each person
 
 - [Budi — Technical Lead and System Integrator](team/BUDI.md)
 - [Alex — Experience Designer, Tester, and Demo Guide](team/ALEX.md)
-- [Ralph — CYD Wrist Terminal Developer](team/RALPH.md)
+- [Raph — CYD Wrist Terminal Developer](team/RALPH.md)
 - [Tyeki — Backpack Hardware and Sensor Lead](team/TYEKI.md)
 - [Milestones and activity log](MILESTONES.md)
 - [Raspberry Pi connection and deployment notes](RASPBERRY_PI_SSH.md)
