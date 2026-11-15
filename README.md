@@ -6,7 +6,7 @@ This README is the team's shared plan. The individual guides explain each person
 
 - [Budi — Technical Lead and System Integrator](team/BUDI.md)
 - [Alex — Experience Designer, Tester, and Demo Guide](team/ALEX.md)
-- [Raph — CYD Wrist Terminal Developer](team/RALPH.md)
+- [Raph — CYD Wrist Terminal Developer](team/Raph.md)
 - [Tyeki — Backpack Hardware and Sensor Lead](team/TYEKI.md)
 - [Milestones and activity log](MILESTONES.md)
 - [Raspberry Pi connection and deployment notes](RASPBERRY_PI_SSH.md)
@@ -43,9 +43,9 @@ OpenAI is an enhancement, not a dependency. Never put an API key in firmware, so
 | Area | Owner | Output consumed by | Interface or handoff |
 | --- | --- | --- | --- |
 | System architecture, backend, database, integration | Budi | Everyone | API contract, setup commands, integrated build |
-| CYD firmware and wrist display | Ralph | Alex and Budi | CYD build plus connection notes |
+| CYD firmware and wrist display | Raph | Alex and Budi | CYD build plus connection notes |
 | Pi, Sense HAT, power, mounting, anomaly trigger | Tyeki | Budi and Alex | Stable sensor stream plus hardware runbook |
-| Screen wording, test passes, demo script, evidence | Alex | Ralph, Budi, and presenter | Approved labels, issue list, final demo steps |
+| Screen wording, test passes, demo script, evidence | Alex | Raph, Budi, and presenter | Approved labels, issue list, final demo steps |
 
 The stable minimum API contract is:
 
@@ -74,7 +74,7 @@ Rules for this interface:
 - Missing sensor values are allowed and must not crash either device.
 - `summary` always has a local fallback; it cannot depend on OpenAI.
 - `source` is `live`, `cached`, or `simulated`, so the demo never mislabels sample data as live data.
-- Budi owns changes to field names. Ralph and Alex review any display-impacting change.
+- Budi owns changes to field names. Raph and Alex review any display-impacting change.
 
 The current service extends this minimum contract without renaming or removing
 any of its fields. It adds filtered motion `features`, data `quality`, explicitly
@@ -108,10 +108,10 @@ Times are relative to the official build start so the plan survives schedule cha
 
 | Time | Shared milestone | Required evidence | Handoff |
 | --- | --- | --- | --- |
-| T+0 to T+1 hour | Kickoff and freeze the minimum demo | Hardware inventory, roles confirmed, sample API response agreed | Budi gives Ralph the JSON example; Tyeki gives Budi a sensor-field list; Alex gives Ralph the first screen wording |
-| T+1 to T+4 | Parallel bring-up | Pi reads Sense HAT; backend serves simulated status; CYD shows a fixed status; Alex has a test sheet and demo outline | Tyeki hands Budi a working sensor script; Budi gives Ralph a reachable API address or mock; Ralph gives Alex a screen to inspect |
-| T+4 to T+7 | First integration | Live sensor values travel Pi → API → CYD; disconnect produces `OFFLINE` | Ralph and Tyeki hand integration notes to Budi; Alex logs failures with exact steps |
-| T+7 to T+10 | Offline intelligence | SQLite stores readings; baseline reaches `NORMAL`; planned stimulus produces `CAUTION` or `ALERT` | Tyeki documents a safe anomaly trigger; Budi exposes status/summary; Ralph maps every state to the display |
+| T+0 to T+1 hour | Kickoff and freeze the minimum demo | Hardware inventory, roles confirmed, sample API response agreed | Budi gives Raph the JSON example; Tyeki gives Budi a sensor-field list; Alex gives Raph the first screen wording |
+| T+1 to T+4 | Parallel bring-up | Pi reads Sense HAT; backend serves simulated status; CYD shows a fixed status; Alex has a test sheet and demo outline | Tyeki hands Budi a working sensor script; Budi gives Raph a reachable API address or mock; Raph gives Alex a screen to inspect |
+| T+4 to T+7 | First integration | Live sensor values travel Pi → API → CYD; disconnect produces `OFFLINE` | Raph and Tyeki hand integration notes to Budi; Alex logs failures with exact steps |
+| T+7 to T+10 | Offline intelligence | SQLite stores readings; baseline reaches `NORMAL`; planned stimulus produces `CAUTION` or `ALERT` | Tyeki documents a safe anomaly trigger; Budi exposes status/summary; Raph maps every state to the display |
 | T+10 to T+12 | Checkpoint 1: minimum demo freeze | Full offline path passes twice from a clean start | Budi tags/freezes the known-good version; Alex takes screenshots/video and writes the exact demo sequence |
 | T+12 to T+18 | Reliability and presentation | Power-cycle recovery, readable wearable, clear story, fallback demo data | Each owner fixes only high-value issues; all changes return to Budi for integration |
 | T+18 to T+21 | Checkpoint 2: feature freeze | Three consecutive rehearsals; one with internet disabled | Alex owns the rehearsal checklist; Budi decides whether any failing stretch feature is removed |
