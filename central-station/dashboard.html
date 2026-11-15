@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mission Control v2: Crew Health Monitor</title>
+<!-- Syncopate font from Google Fonts (needs internet; without it the logo falls back to a plain wide font) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   EASY DESIGN SETTINGS. Change the colors and fonts here to restyle the
+   whole dashboard. Save the file, then refresh the browser.
+   Everything is sized in "rem", so the whole page scales with the screen:
+   change the font-size on <html> below to make EVERYTHING bigger or smaller.
+   ===================================================================== */
+:root {
+  --bg: #0c1b26;        /* page background: deep, quiet blue-teal */
+  --panel: #12262f;     /* cards and side panels */
+  --panel-2: #183440;   /* slightly lighter boxes */
+  --line: #25424f;      /* borders and grid lines (soft, low contrast) */
+  --text: #ffffff;      /* main text: white */
+  --muted: #a9bfca;     /* small labels: soft cool gray-blue */
+  --accent: #7fc4d6;    /* highlight color and chart lines: calm aqua */
+  --ok: #2ecc71;        /* green  (panel state: unchanged) */
+  --warn: #f5c518;      /* yellow (panel state: unchanged) */
+  --crit: #ff4d4f;      /* red    (panel state: unchanged) */
+  --none: #7f8c9b;      /* gray (no signal) (panel state: unchanged) */
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --radius: 1rem;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+}
+[data-theme="light"] {
+  --bg: #e9f1f5; --panel: #f7fbfc; --panel-2: #e3eef2; --line: #c7d8df;
+  --text: #12303c; --muted: #51707e; --accent: #1f7f96;
+  --ok: #14a05a; --warn: #c79500; --crit: #d92d2f; --none: #6b7686;
+}
+
+* { box-sizing: border-box; }
+/* BASE TEXT SIZE: scales with the browser window so the page always fits on one screen. */
+html { font-size: clamp(12px, min(1vw, 1.75vh), 22px); }
+html, body { height: 100%; margin: 0; overflow: hidden; }
+body { background: var(--bg); color: var(--text); font-family: var(--font); }
+button { font: inherit; font-size: .8rem; color: var(--text); background: var(--panel-2); border: 1px solid var(--line);
+         border-radius: .5rem; padding: .35rem .75rem; cursor: pointer;
+         transition: border-color .25s var(--ease), background-color .25s var(--ease), transform .12s var(--ease); }
+button:hover { border-color: var(--accent); }
+button:active { transform: scale(.97); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- page frame: header, attention strip, weather strip, then cards + log. No scrolling. ---------- */
+.app { height: 100%; display: grid; grid-template-rows: auto auto auto minmax(0, 1fr); gap: .6rem; padding: .7rem 1rem .9rem; }
+
+/* ---------- header ---------- */
+header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0 .2rem; }
+.brand { display: flex; align-items: baseline; gap: .8rem; white-space: nowrap; }
+.brand b { font-size: .72rem; font-weight: 600; letter-spacing: .22em; color: var(--accent); }
+.brand h1 { margin: 0; font-size: 1.3rem; font-weight: 500; }
+.right { display: flex; align-items: center; gap: 1rem; }
+.pills { display: flex; gap: .45rem; }
+.pill { font-size: .78rem; font-weight: 700; padding: .25rem .65rem; border-radius: 2rem; white-space: nowrap;
+        border: 1px solid var(--line); background: var(--panel-2); }
+.pill i { font-style: normal; font-family: var(--mono); margin-left: .4rem; }
+.clock { font-family: var(--mono); font-size: .75rem; color: var(--muted); white-space: nowrap; }
+.logo { font-family: "Syncopate", system-ui, -apple-system, "Segoe UI", sans-serif; font-weight: 700;
+        font-size: 1.15rem; letter-spacing: .32em; color: var(--accent); text-transform: uppercase;
+        padding-left: 1.1rem; border-left: 1px solid var(--line); line-height: 1; }
+
+/* ---------- NEEDS ATTENTION strip (always the same height, so nothing jumps) ---------- */
+.attn { display: flex; align-items: center; gap: .9rem; height: 2.7rem; padding: 0 1rem; border-radius: .8rem; overflow: hidden;
+        background: var(--panel); border: 1px solid var(--line);
+        transition: background-color .5s var(--ease), border-color .5s var(--ease); }
+.attn.crit { border-color: var(--crit); background: color-mix(in srgb, var(--crit) 12%, var(--panel)); }
+.attn.warn { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 9%, var(--panel)); }
+.attn-label { font-size: .75rem; font-weight: 800; letter-spacing: .14em; white-space: nowrap; color: var(--muted); }
+.attn.crit .attn-label { color: var(--crit); } .attn.warn .attn-label { color: var(--warn); }
+.attn.calm .attn-label { color: var(--ok); }
+.attn-chips { display: flex; gap: .5rem; flex: 1; min-width: 0; overflow: hidden; }
+.achip { display: inline-flex; align-items: center; gap: .4rem; padding: .22rem .65rem; border-radius: 2rem; font-size: .85rem;
+         white-space: nowrap; cursor: pointer; border: 1px solid var(--line); background: var(--panel-2);
+         transition: border-color .2s var(--ease), transform .12s var(--ease); }
+.achip:hover { border-color: var(--accent); } .achip:active { transform: scale(.97); }
+.achip.crit { border-color: var(--crit); } .achip.warn { border-color: var(--warn); }
+.achip b { font-weight: 700; } .achip .ic { font-size: .8rem; }
+.achip.crit .ic { color: var(--crit); } .achip.warn .ic { color: var(--warn); } .achip.none .ic { color: var(--none); }
+.attn-meta { font-size: .78rem; color: var(--muted); white-space: nowrap; }
+
+/* ---------- SPACE WEATHER strip (slim) ---------- */
+.wx { display: flex; align-items: center; gap: .9rem; height: 3.3rem; padding: 0 1rem; border-radius: .8rem;
+      background: var(--panel); border: 1px solid var(--line); transition: border-color .5s var(--ease); }
+.wx.warn { border-color: var(--warn); } .wx.crit { border-color: var(--crit); }
+.wx h2 { margin: 0; font-size: .72rem; letter-spacing: .14em; color: var(--accent); white-space: nowrap; }
+.wbadge { font-size: .65rem; font-weight: 800; letter-spacing: .06em; padding: .15rem .55rem; border-radius: 2rem;
+          color: #000; background: var(--none); white-space: nowrap; }
+.wbadge.LIVE { background: var(--ok); } .wbadge.PARTIAL, .wbadge.STALE, .wbadge.OFFLINE { background: var(--warn); }
+.wbadge.SIMULATED { background: var(--accent); } .wbadge.ERROR { background: var(--crit); color: #fff; }
+.wtiles { display: flex; gap: .6rem; flex: 1; min-width: 0; }
+.wi { flex: 1 1 0; min-width: 0; border-left: .3rem solid var(--none); background: var(--panel-2); border-radius: .5rem; padding: .25rem .6rem;
+      transition: border-color .4s var(--ease); }
+.wi.ok { border-left-color: var(--ok); } .wi.warn { border-left-color: var(--warn); } .wi.crit { border-left-color: var(--crit); }
+.wi label { display: block; font-size: .58rem; letter-spacing: .1em; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wi span { font-family: var(--mono); font-size: 1.05rem; font-weight: 500; }
+.wi small { font-size: .65rem; color: var(--muted); margin-left: .25rem; }
+.wmeta { font-size: .72rem; color: var(--muted); max-width: 17rem; line-height: 1.25; }
+.wmeta.adv { color: var(--warn); font-weight: 700; } .wmeta.adv.crit { color: var(--crit); }
+
+/* ---------- main area: astronaut cards + alert log ---------- */
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 19rem; gap: .8rem; min-height: 0; }
+#grid { display: grid; gap: .7rem; min-height: 0; }
+#empty { color: var(--muted); padding: 2rem .3rem; font-size: 1rem; grid-column: 1 / -1; }
+
+/* ---------- astronaut cards ---------- */
+.card { position: relative; display: flex; flex-direction: column; min-height: 0; min-width: 0;
+        background: var(--panel); border: 1px solid var(--line); border-left: .38rem solid var(--none);
+        border-radius: var(--radius); padding: .6rem .75rem .6rem .7rem; cursor: pointer; user-select: none;
+        transition: border-color .35s var(--ease), background-color .35s var(--ease), opacity .4s var(--ease), box-shadow .35s var(--ease), transform .12s var(--ease); }
+.card:hover { background: var(--panel-2); box-shadow: 0 .2rem 1rem rgba(0,0,0,.18); }
+.card:active { transform: scale(.992); }
+.card.OK { border-left-color: var(--ok); }
+.card.WARNING { border-left-color: var(--warn); }
+.card.CRITICAL { border-left-color: var(--crit); border-color: color-mix(in srgb, var(--crit) 55%, var(--line)); }
+.card.NOSIGNAL { border-left-color: var(--none); opacity: .72; }
+/* soft red glow on critical cards (an overlay fading in and out, so nothing else repaints) */
+.card::after { content: ""; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none; opacity: 0;
+               box-shadow: 0 0 1.1rem 0 var(--crit); }
+.card.CRITICAL::after { animation: glow 2.4s ease-in-out infinite; }
+@keyframes glow { 0%,100% { opacity: 0; } 50% { opacity: .75; } }
+
+.ctop { display: flex; align-items: center; justify-content: space-between; gap: .4rem; height: 1.9rem; }
+.name { font-size: 1.1rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st { font-size: .72rem; font-weight: 800; letter-spacing: .06em; padding: .15rem .5rem; border-radius: 2rem; white-space: nowrap;
+      transition: background-color .35s var(--ease), color .35s var(--ease); }
+.st i { font-style: normal; margin-right: .3rem; }
+.st.OK { color: var(--ok); padding-right: 0; }                         /* quiet when everything is fine */
+.st.WARNING { background: var(--warn); color: #000; }
+.st.CRITICAL { background: var(--crit); color: #fff; }
+.st.NOSIGNAL { background: var(--none); color: #fff; }
+
+.rows { display: flex; flex-direction: column; margin-top: .15rem; }
+.row { display: flex; align-items: center; justify-content: space-between; height: 3rem; padding: 0 .1rem;
+       border-top: 1px solid var(--line); }
+.rl { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+.lab { font-size: .8rem; letter-spacing: .08em; color: var(--muted); white-space: nowrap; }
+.lim { font-size: .74rem; font-weight: 700; letter-spacing: .02em; white-space: nowrap; color: var(--muted); }
+.rv { display: flex; align-items: baseline; gap: .25rem; }
+.val { font-family: var(--mono); font-size: 2.05rem; font-weight: 500; line-height: 1; transition: color .35s var(--ease); }
+.rv small { font-size: .78rem; color: var(--muted); }
+.row.warn .val, .row.warn .lim { color: var(--warn); }
+.row.crit .val, .row.crit .lim { color: var(--crit); }
+.row.warn .val, .row.crit .val { font-weight: 700; }
+.row.warn, .row.crit { background: linear-gradient(90deg, transparent, color-mix(in srgb, currentColor 0%, transparent)); }
+
+.gwrap { flex: 1; min-height: 3rem; margin-top: .3rem; position: relative; }
+.spark { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.gcap { display: flex; justify-content: space-between; align-items: center; height: 1.15rem; margin-top: .15rem;
+        font-size: .66rem; letter-spacing: .08em; color: var(--muted); }
+.gtag { border: 1px solid var(--line); border-radius: 1rem; padding: 0 .45rem; font-size: .62rem; font-weight: 700; }
+.gtag.pi { color: var(--accent); border-color: var(--accent); }
+.gtag:empty { display: none; }
+
+/* two reserved chip slots: always the same height, so the card never changes size */
+.chips { display: flex; flex-direction: column; gap: .25rem; margin-top: .3rem; height: 3.6rem; }
+.slot { display: flex; align-items: center; gap: .3rem; height: 1.7rem; min-width: 0; }
+.chip { flex: 1; min-width: 0; display: flex; align-items: center; gap: .35rem; height: 100%; padding: 0 .55rem;
+        border-radius: .5rem; font-size: .84rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        border: 1px solid var(--line); background: var(--panel-2); }
+.chip .ic { font-size: .72rem; }
+.chip.warn { border-color: var(--warn); } .chip.warn .ic { color: var(--warn); }
+.chip.crit { border-color: var(--crit); background: color-mix(in srgb, var(--crit) 14%, var(--panel-2)); } .chip.crit .ic { color: var(--crit); }
+.chip.early { border-style: dashed; border-color: var(--warn); font-weight: 500; } .chip.early.crit { border-color: var(--crit); }
+.chip.none { border-color: var(--none); color: var(--muted); }
+.chip.calm { border-color: transparent; background: transparent; color: var(--muted); font-weight: 400; padding-left: .1rem; }
+.chip.calm .ic { color: var(--ok); }
+.more { font-size: .78rem; font-weight: 700; color: var(--muted); white-space: nowrap; padding: 0 .3rem; }
+.more:empty { display: none; }
+.chip:empty { display: none; }
+
+/* ---------- alert log ---------- */
+aside { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: .8rem .9rem;
+        display: flex; flex-direction: column; min-height: 0; }
+aside h2 { margin: 0 0 .5rem; font-size: .78rem; letter-spacing: .14em; color: var(--accent); }
+#log { overflow-y: auto; min-height: 0; flex: 1; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.ev { display: grid; grid-template-columns: 3.6rem .6rem 1fr; gap: .45rem; padding: .5rem 0;
+      border-top: 1px solid var(--line); font-size: .85rem; align-items: start; }
+.ev time { font-family: var(--mono); font-size: .75rem; color: var(--muted); }
+.dot { width: .6rem; height: .6rem; border-radius: 50%; margin-top: .25rem; background: var(--none); }
+.dot.OK { background: var(--ok); } .dot.WARNING { background: var(--warn); } .dot.CRITICAL { background: var(--crit); }
+.ev b { display: block; }
+#noevents { color: var(--muted); font-size: .8rem; }
+
+/* ---------- detail popup ---------- */
+#modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 1.2rem; z-index: 10;
+         background: rgba(5,14,20,.62); opacity: 0; visibility: hidden;
+         transition: opacity .22s var(--ease), visibility 0s linear .22s; }
+#modal.open { opacity: 1; visibility: visible; transition: opacity .22s var(--ease), visibility 0s; }
+.sheet { background: var(--panel); border: 1px solid var(--line); border-radius: 1.1rem; width: min(64rem, 100%); max-height: 94vh;
+         overflow: auto; padding: 1.2rem 1.5rem; transform: translateY(.7rem) scale(.985); opacity: 0;
+         transition: transform .26s var(--ease), opacity .22s var(--ease); scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+#modal.open .sheet { transform: none; opacity: 1; }
+.sheet .top { display: flex; justify-content: space-between; align-items: center; }
+.sheet .top h2 { margin: 0; font-size: 1.5rem; }
+.sheet .badge { font-size: .75rem; font-weight: 800; letter-spacing: .06em; padding: .2rem .65rem; border-radius: 2rem; color: #000; margin-right: .5rem; }
+.badge.OK { background: var(--ok); } .badge.WARNING { background: var(--warn); }
+.badge.CRITICAL { background: var(--crit); color: #fff; } .badge.NOSIGNAL { background: var(--none); color: #fff; }
+.alerts { margin-top: .5rem; font-size: .9rem; color: var(--warn); }
+.alerts.crit { color: var(--crit); }
+.fc { margin-top: .5rem; font-size: .82rem; padding: .4rem .7rem; border-radius: .5rem; background: var(--panel-2); border-left: .3rem solid var(--warn); }
+.fc.critical { border-left-color: var(--crit); }
+.charts { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem 1.1rem; margin-top: .9rem; }
+.chartbox h3 { margin: 0 0 .25rem; font-size: .72rem; letter-spacing: .1em; color: var(--muted); font-weight: 600; }
+.chart { width: 100%; height: 9rem; display: block; background: var(--panel-2); border-radius: .5rem; }
+.legend { font-size: .72rem; color: var(--muted); margin-top: .5rem; }
+.simtag { border: 1px solid var(--accent); color: var(--accent); border-radius: 1rem; padding: .05rem .5rem; font-size: .62rem; letter-spacing: .08em; margin-left: .3rem; }
+table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+td { padding: .3rem 0; font-size: .9rem; border-top: 1px solid var(--line); }
+td:first-child { color: var(--muted); } td:last-child { text-align: right; font-family: var(--mono); }
+.task { display: grid; grid-template-columns: 6rem 1fr; gap: .6rem; padding: .45rem 0; font-size: .85rem; border-top: 1px solid var(--line); }
+.task .pr { font-size: .72rem; font-weight: 700; letter-spacing: .06em; color: var(--accent); }
+.task .pr.CAUTION { color: var(--warn); } .task .pr.WARNING, .task .pr.CRITICAL { color: var(--crit); }
+.task small { display: block; color: var(--muted); font-size: .72rem; }
+.note { margin-top: 1rem; font-size: .72rem; color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .card.CRITICAL::after { animation: none; opacity: .5; }
+  * { transition-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><b>MISSION CONTROL</b><h1>Crew Health Monitor</h1></div>
+    <div class="right">
+      <div class="pills" id="summary"></div>
+      <div class="clock" id="clock"></div>
+      <button id="soundBtn" title="Play a soft tone when an astronaut becomes CRITICAL">Sound: off</button>
+      <button id="themeBtn" title="Switch light / dark">Light / Dark</button>
+      <div class="logo">ASTRA</div>
+    </div>
+  </header>
+
+  <div class="attn calm" id="attn" role="status">
+    <span class="attn-label" id="attnLabel">ALL CREW NOMINAL</span>
+    <div class="attn-chips" id="attnChips"></div>
+    <span class="attn-meta" id="attnMeta"></span>
+  </div>
+
+  <div class="wx" id="wx">
+    <h2>SPACE WEATHER</h2><span class="wbadge" id="wMode">...</span>
+    <div class="wtiles" id="wItems"></div>
+    <div class="wmeta" id="wMeta"></div>
+  </div>
+
+  <div class="main">
+    <div id="grid"><div id="empty">Waiting for astronaut data...</div></div>
+    <aside>
+      <h2>ALERT LOG</h2>
+      <div id="noevents">No events yet.</div>
+      <div id="log"></div>
+    </aside>
+  </div>
+</div>
+
+<div id="modal" aria-hidden="true">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <div class="top"><h2 id="dName"></h2><span><span class="badge" id="dBadge"></span><button id="closeBtn">Close</button></span></div>
+    <div class="alerts" id="dAlerts"></div>
+    <div id="dForecast"></div>
+    <div class="charts">
+      <div class="chartbox"><h3>SUIT TEMPERATURE (&deg;C)</h3><canvas class="chart" id="chT"></canvas></div>
+      <div class="chartbox"><h3>SUIT PRESSURE (hPa)</h3><canvas class="chart" id="chP"></canvas></div>
+      <div class="chartbox" id="hrBlock"><h3>HEART RATE (bpm)</h3><canvas class="chart" id="chH"></canvas></div>
+      <div class="chartbox" id="btBlock"><h3>BODY TEMPERATURE (&deg;C) <span class="simtag" id="btTag">SIMULATED</span></h3><canvas class="chart" id="chB"></canvas></div>
+      <div class="chartbox" id="bpBlock"><h3>SYSTOLIC BLOOD PRESSURE (mmHg) <span class="simtag" id="bpTag">SIMULATED</span></h3><canvas class="chart" id="chS"></canvas></div>
+    </div>
+    <div class="legend">Dashed yellow = warning limit &nbsp; Dashed red = critical limit</div>
+    <table id="dTable"></table>
+    <div id="dTasks"></div>
+    <div class="note">Suit-pressure limits are based on NASA suit figures, and suit-temperature and the top heart-rate limit loosely on NASA ranges (sources are listed in server.py). The other limits are placeholder demo values, not medical standards. Body temperature, blood pressure and blood oxygen are simulated: this project has no sensor for them yet.</div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   SETTINGS you may want to change
+   ===================================================================== */
+const GRAPH_SECONDS = 60;        // how much history each card graph shows
+const GRAPH_DELAY = 1.2;         // seconds of delay that lets the line glide smoothly instead of jumping
+const FORECAST_HOLD_MS = 4000;   // an early-warning chip stays this long after it stops being predicted (no flicker)
+
+/* ---------- what each card shows ---------- */
+const ROWS = [
+  { key: 'pressure_hpa',   label: 'PRESSURE',   unit: 'hPa', dec: 0 },
+  { key: 'temperature_c',  label: 'SUIT TEMP',  unit: '°C', dec: 1 },
+  { key: 'heart_rate_bpm', label: 'HEART RATE', unit: 'bpm', dec: 0 },
+];
+const GRAPHS = {   // minSpan = smallest vertical range, so normal tiny wobble stays calm instead of looking dramatic
+  pressure_hpa:   { name: 'SUIT PRESSURE', minSpan: 14 },
+  temperature_c:  { name: 'SUIT TEMP',     minSpan: 5 },
+  heart_rate_bpm: { name: 'HEART RATE',    minSpan: 36 },
+  body_temp_c:    { name: 'BODY TEMP',     minSpan: 1.2 },
+  bp_systolic:    { name: 'SYSTOLIC BP',   minSpan: 36 },
+};
+const SHORT = { pressure_hpa: 'Pressure', temperature_c: 'Suit temp', heart_rate_bpm: 'Heart rate', body_temp_c: 'Body temp', bp_systolic: 'BP systolic' };
+const DECIMALS = { pressure_hpa: 0, temperature_c: 1, heart_rate_bpm: 0, body_temp_c: 1, bp_systolic: 0, bp_diastolic: 0, spo2_pct: 0, peak_acceleration_g: 1, tilt: 0 };
+const ICON = { OK: '●', WARNING: '▲', CRITICAL: '✕', 'NO SIGNAL': '○', warn: '▲', crit: '✕' };
+
+/* ---------- small helpers ---------- */
+let state = { astronauts: [], events: [], limits: {} };
+let byId = {};
+let detailId = null, lastFocus = null;
+let serverOffset = 0;                  // (server clock) minus (this computer's clock), in seconds
+let pal = {};                          // colors for the canvas, read from the CSS above
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = (v, d) => (v === undefined || v === null) ? '-' : Number(v).toFixed(d);
+const tilt = d => d > 180 ? d - 360 : d;
+const cls = s => s.replace(' ', '');
+const clock = ts => new Date(ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+const $ = id => document.getElementById(id);
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+// only touch the page when something really changed (this is what keeps clicking and hovering smooth)
+const setText = (el, v) => { if (el._t !== v) { el._t = v; el.textContent = v; } };
+const setHTML = (el, v) => { if (el._h !== v) { el._h = v; el.innerHTML = v; } };
+const setCls = (el, v) => { if (el._c !== v) { el._c = v; el.className = v; } };
+const natural = (a, b) => a.localeCompare(b, undefined, { numeric: true });
+
+function readPalette() {
+  const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+  pal = { ok: g('--ok'), warn: g('--warn'), crit: g('--crit'), none: g('--none'), accent: g('--accent'),
+          muted: g('--muted'), line: g('--line'), mono: g('--mono') };
+}
+const levelColor = lvl => lvl === 'crit' ? pal.crit : lvl === 'warn' ? pal.warn : pal.accent;
+
+/* ---------- modal chart (bigger, with axes and limit lines) ---------- */
+function sizeCanvas(cv) {
+  const dpr = window.devicePixelRatio || 1;
+  const w = cv.clientWidth, h = cv.clientHeight;
+  if (!w || !h) return null;
+  const pw = Math.round(w * dpr), ph = Math.round(h * dpr);
+  if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; }   // resizing clears the canvas, so only when needed
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w, h };
+}
+
+function drawChart(canvas, pts, key, o) {
+  o = o || {};
+  const s = sizeCanvas(canvas);
+  if (!s) return;
+  const { ctx, w, h } = s;
+  ctx.clearRect(0, 0, w, h);
+  const data = pts.filter(p => p[key] !== null && p[key] !== undefined);
+  const padL = 46, padR = 8, padT = 8, padB = 20;
+  const iw = w - padL - padR, ih = h - padT - padB;
+  const mono = '11px ' + pal.mono;
+  if (data.length < 2) {
+    ctx.fillStyle = pal.muted; ctx.font = mono; ctx.fillText('collecting data...', padL + 4, h / 2);
+    return;
+  }
+  const t0 = data[0].t, t1 = data[data.length - 1].t;
+  let lo = Math.min(...data.map(p => p[key]));
+  let hi = Math.max(...data.map(p => p[key]));
+  const lim = o.limits;
+  if (lim) {
+    lo = Math.min(lo, lim.warn[0], lim.crit[0]);
+    hi = Math.max(hi, lim.warn[1], lim.crit[1]);
+  }
+  if (hi - lo < 1) { hi += 0.5; lo -= 0.5; }
+  const pad = (hi - lo) * 0.08; lo -= pad; hi += pad;
+  const X = t => padL + (t1 === t0 ? 0 : (t - t0) / (t1 - t0)) * iw;
+  const Y = v => padT + (1 - (v - lo) / (hi - lo)) * ih;
+
+  ctx.strokeStyle = pal.line; ctx.fillStyle = pal.muted; ctx.font = mono; ctx.lineWidth = 1;
+  for (let i = 0; i <= 3; i++) {
+    const v = lo + (hi - lo) * i / 3, y = Y(v);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(w - padR, y); ctx.stroke();
+    ctx.fillText(v.toFixed(0), 4, y + 4);
+  }
+  ctx.fillText('-' + Math.round(t1 - t0) + 's', padL, h - 4);
+  ctx.fillText('now', w - padR - 24, h - 4);
+
+  if (lim) {
+    ctx.setLineDash([5, 4]); ctx.lineWidth = 1;
+    [[lim.warn, pal.warn], [lim.crit, pal.crit]].forEach(([pair, color]) => {
+      ctx.strokeStyle = color;
+      pair.forEach(v => { if (v >= lo && v <= hi) { ctx.beginPath(); ctx.moveTo(padL, Y(v)); ctx.lineTo(w - padR, Y(v)); ctx.stroke(); } });
+    });
+    ctx.setLineDash([]);
+  }
+  ctx.strokeStyle = pal.accent; ctx.lineWidth = 2; ctx.lineJoin = 'round';
+  ctx.beginPath();
+  let prev = null;
+  data.forEach(p => {
+    if (prev === null || p.t - prev.t > 3) ctx.moveTo(X(p.t), Y(p[key])); else ctx.lineTo(X(p.t), Y(p[key]));
+    prev = p;
+  });
+  ctx.stroke();
+}
+
+/* ---------- small moving graph on each card ---------- */
+function drawSpark(ui, T) {
+  const s = ui.size;
+  if (!s || !s.w || !s.h) return;
+  const ctx = ui.ctx, w = s.w, h = s.h, key = ui.gk;
+  ctx.setTransform(s.dpr, 0, 0, s.dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  const right = T - GRAPH_DELAY, left = right - GRAPH_SECONDS;
+  const all = (ui.trend || []).filter(p => p[key] !== null && p[key] !== undefined && p.t >= left - 4);
+  if (all.length < 2) {
+    ctx.fillStyle = pal.muted; ctx.font = '11px ' + pal.mono; ctx.fillText('collecting data...', 4, h / 2 + 4);
+    return;
+  }
+  const X = t => (t - left) / GRAPH_SECONDS * w;
+  // vertical range: what is visible, plus the limit line if one is shown, never tighter than minSpan
+  let lo = Infinity, hi = -Infinity;
+  all.forEach(p => { if (p.t >= left) { lo = Math.min(lo, p[key]); hi = Math.max(hi, p[key]); } });
+  if (!isFinite(lo)) { lo = all[all.length - 1][key]; hi = lo; }
+  if (ui.limit !== null && ui.limit !== undefined) { lo = Math.min(lo, ui.limit); hi = Math.max(hi, ui.limit); }
+  const span = Math.max(hi - lo, GRAPHS[key].minSpan), mid = (hi + lo) / 2;
+  const tlo = mid - span / 2 - span * 0.1, thi = mid + span / 2 + span * 0.1;
+  if (ui.ylo === null || ui.ykey !== key) { ui.ylo = tlo; ui.yhi = thi; ui.ykey = key; }
+  else { ui.ylo += (tlo - ui.ylo) * 0.08; ui.yhi += (thi - ui.yhi) * 0.08; }   // range glides, never jumps
+  const padT = 3, padB = 3;
+  const Y = v => padT + (1 - (v - ui.ylo) / (ui.yhi - ui.ylo)) * (h - padT - padB);
+  const color = levelColor(ui.level);
+
+  if (ui.limit !== null && ui.limit !== undefined) {           // dashed limit line
+    ctx.save(); ctx.setLineDash([4, 3]); ctx.lineWidth = 1; ctx.strokeStyle = levelColor(ui.limitLevel);
+    ctx.globalAlpha = .9; ctx.beginPath(); ctx.moveTo(0, Y(ui.limit)); ctx.lineTo(w, Y(ui.limit)); ctx.stroke(); ctx.restore();
+  }
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, w, h); ctx.clip();
+  // split into runs wherever the signal dropped for more than 3 seconds
+  const runs = []; let run = [];
+  all.forEach(p => { if (run.length && p.t - run[run.length - 1].t > 3) { runs.push(run); run = []; } run.push(p); });
+  runs.push(run);
+  ctx.lineJoin = 'round'; ctx.lineWidth = 1.8; ctx.strokeStyle = color;
+  runs.forEach(r => {
+    if (r.length < 2) return;
+    ctx.beginPath();
+    r.forEach((p, i) => { const x = X(p.t), y = Y(p[key]); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
+    ctx.stroke();
+    ctx.lineTo(X(r[r.length - 1].t), h); ctx.lineTo(X(r[0].t), h); ctx.closePath();
+    ctx.globalAlpha = .1; ctx.fillStyle = color; ctx.fill(); ctx.globalAlpha = 1;
+  });
+  ctx.restore();
+}
+
+/* ---------- time-to-limit text ---------- */
+function etaText(sec) { return sec < 90 ? sec + ' s' : Math.round(sec / 60) + ' min'; }
+function forecastHTML(a) {
+  return (a.forecasts || []).map(f =>
+    `<div class="fc ${esc(f.limit_name)}">${esc(f.label)} ${f.rate_per_min < 0 ? 'falling' : 'rising'}
+     ${Math.abs(f.rate_per_min)} ${esc(f.unit)}/min. At this rate it reaches the ${esc(f.limit_name)}
+     limit (${esc(f.limit_value)}) in about ${etaText(f.eta_seconds)}.</div>`).join('');
+}
+function taskList(d) {
+  const t = d.tasks || [];
+  if (!t.length) return '';
+  return '<h3 style="margin:1rem 0 .3rem;font-size:.72rem;letter-spacing:.1em;color:var(--muted);font-weight:600">ADVISORIES FROM THE PI' +
+    (t.some(x => String(x.source).toLowerCase() === 'simulated') ? ' <span class="simtag">SIMULATED</span>' : '') + '</h3>' +
+    t.map(x => `<div class="task"><div class="pr ${esc(String(x.priority).toUpperCase())}">${esc(x.priority)}</div>
+      <div>${esc(x.text)}<small>${esc(x.category)} &middot; ${esc(x.id)}</small></div></div>`).join('');
+}
+
+/* =====================================================================
+   ASTRONAUT CARDS. Each card is built ONCE. After that, only the parts
+   that changed are updated, so the page never flickers or rebuilds.
+   ===================================================================== */
+const cards = {};
+
+function buildCard(id) {
+  const el = document.createElement('div');
+  el.className = 'card NOSIGNAL';
+  el.tabIndex = 0;
+  el.setAttribute('role', 'button');
+  el.dataset.id = id;
+  el.innerHTML = `
+    <div class="ctop"><span class="name"></span><span class="st"></span></div>
+    <div class="rows">${ROWS.map(r => `
+      <div class="row" data-k="${r.key}">
+        <div class="rl"><span class="lab">${r.label}</span><span class="lim"></span></div>
+        <div class="rv"><span class="val">-</span><small>${r.unit}</small></div>
+      </div>`).join('')}
+    </div>
+    <div class="gwrap"><canvas class="spark"></canvas></div>
+    <div class="gcap"><span class="gname"></span><span class="gtag"></span></div>
+    <div class="chips">
+      <div class="slot"><div class="chip" data-s="1"></div></div>
+      <div class="slot"><div class="chip" data-s="2"></div><span class="more"></span></div>
+    </div>`;
+  const ui = {
+    id, el, trend: [], gk: 'heart_rate_bpm', gkSince: 0, level: 'ok', limit: null, limitLevel: 'warn',
+    ylo: null, yhi: null, ykey: null, fc: {}, size: null,
+    name: el.querySelector('.name'), st: el.querySelector('.st'),
+    rows: {}, cv: el.querySelector('canvas'),
+    gname: el.querySelector('.gname'), gtag: el.querySelector('.gtag'),
+    chip1: el.querySelector('[data-s="1"]'), chip2: el.querySelector('[data-s="2"]'), more: el.querySelector('.more'),
+  };
+  ROWS.forEach(r => {
+    const row = el.querySelector(`.row[data-k="${r.key}"]`);
+    ui.rows[r.key] = { row, lab: row.querySelector('.lab'), lim: row.querySelector('.lim'), val: row.querySelector('.val') };
+  });
+  ui.ctx = ui.cv.getContext('2d');
+  new ResizeObserver(() => {
+    const dpr = window.devicePixelRatio || 1, w = ui.cv.clientWidth, h = ui.cv.clientHeight;
+    ui.cv.width = Math.round(w * dpr); ui.cv.height = Math.round(h * dpr);
+    ui.size = { w, h, dpr };
+    drawSpark(ui, nowServer());
+  }).observe(ui.cv);
+  cards[id] = ui;
+  return ui;
+}
+
+function fmtVal(key, v) { return Number(v).toFixed(DECIMALS[key] === undefined ? 1 : DECIMALS[key]); }
+
+function chipFor(it) {
+  const unit = it.unit === '°' ? '°' : (it.unit === '%' ? '%' : ' ' + it.unit);
+  const dir = it.dir === 'low' ? 'below' : 'above';
+  const title = `${it.short} ${fmtVal(it.key, it.value)}${unit} is ${dir} the ${it.level === 'crit' ? 'critical' : 'warning'} limit (${fmtLimit(it.limit)})`;
+  return { cls: it.level, ic: ICON[it.level], text: `${it.short} ${fmtVal(it.key, it.value)}${unit}`, title };
+}
+const fmtLimit = v => (Math.abs(v) >= 100 || Number.isInteger(v)) ? String(Math.round(v * 10) / 10) : v.toFixed(1);
+
+function updateCard(a, nowMs) {
+  const ui = cards[a.id] || buildCard(a.id);
+  const d = a.data, st = a.status, c = cls(st), nosig = st === 'NO SIGNAL';
+  const isPi = d.data_source === 'pi';
+  setCls(ui.el, 'card ' + c);
+  setText(ui.name, a.id);
+  setCls(ui.st, 'st ' + c);
+  setHTML(ui.st, `<i>${ICON[st]}</i>${st}`);
+
+  const abn = {};
+  (a.abnormal || []).forEach(i => { abn[i.key] = i; });
+
+  // the three big numbers (abnormal ones turn yellow/red, get bold, and show their limit)
+  ROWS.forEach(r => {
+    const R = ui.rows[r.key], v = d[r.key], it = nosig ? null : abn[r.key];
+    setText(R.val, nosig || v === undefined ? '—' : Number(v).toFixed(r.dec));
+    setCls(R.row, 'row' + (it ? ' ' + it.level : ''));
+    setText(R.lim, it ? `${ICON[it.level]} ${it.dir === 'low' ? 'min' : 'max'} ${fmtLimit(it.limit)}`
+                       : (r.key === 'heart_rate_bpm' && isPi && d.vitals_simulated ? 'simulated' : ''));
+  });
+
+  // early warnings from the trend forecasts (kept for a few seconds so they do not flicker)
+  if (nosig) ui.fc = {};
+  else {
+    (a.forecasts || []).forEach(f => { ui.fc[f.key] = { f, until: nowMs + FORECAST_HOLD_MS }; });
+    Object.keys(ui.fc).forEach(k => { if (ui.fc[k].until < nowMs) delete ui.fc[k]; });
+  }
+  const early = Object.values(ui.fc).map(x => x.f).filter(f => !abn[f.key] || abn[f.key].level !== 'crit');
+
+  // which signal the graph draws: the problem signal if there is one, else an approaching one, else heart rate
+  const level = nosig ? 'ok' : (a.abnormal || []).some(i => i.level === 'crit') ? 'crit' : (a.abnormal || []).length ? 'warn' : 'ok';
+  let want = null;
+  const graphable = k => GRAPHS[k] !== undefined && (ui.trend.length === 0 || ui.trend.some(p => p[k] !== null && p[k] !== undefined));
+  const sorted = (a.abnormal || []).slice().sort((x, y) => (y.level === 'crit') - (x.level === 'crit'));
+  const bad = nosig ? undefined : sorted.find(i => GRAPHS[i.key]);
+  if (bad) want = { key: bad.key, limit: bad.limit, limitLevel: bad.level, level: bad.level };
+  else if (early.length && GRAPHS[early[0].key]) want = { key: early[0].key, limit: early[0].limit_value, limitLevel: early[0].limit_name === 'critical' ? 'crit' : 'warn', level: 'ok' };
+  if (want) {
+    if (ui.gk !== want.key) { ui.gk = want.key; ui.gkSince = nowMs; }
+    ui.limit = want.limit; ui.limitLevel = want.limitLevel; ui.level = want.level;
+  } else {
+    if (ui.gk !== 'heart_rate_bpm' && nowMs - ui.gkSince > 5000) ui.gk = 'heart_rate_bpm';   // go back to calm default after 5 s
+    ui.limit = null; ui.level = nosig ? 'ok' : level;
+    if (d.heart_rate_bpm === undefined) ui.gk = 'pressure_hpa';
+  }
+  setText(ui.gname, GRAPHS[ui.gk].name + ' · ' + GRAPH_SECONDS + ' s');
+  setCls(ui.gtag, 'gtag' + (isPi ? ' pi' : ''));
+  setText(ui.gtag, isPi ? 'LIVE PI' : (d.data_source === 'sim' ? 'SIMULATED' : ''));
+
+  // chips: top two problems (+N more). With nothing wrong, one quiet line.
+  const chips = [];
+  if (nosig) chips.push({ cls: 'none', ic: ICON['NO SIGNAL'], text: 'No signal for ' + Math.round(a.age_seconds) + ' s', title: 'No data received' });
+  else {
+    sorted.forEach(i => chips.push(chipFor(i)));
+    early.forEach(f => chips.push({
+      cls: 'early' + (f.limit_name === 'critical' ? ' crit' : ''), ic: f.rate_per_min < 0 ? '↘' : '↗',
+      text: `${SHORT[f.key] || f.label} · ${etaText(f.eta_seconds)}`,
+      title: `${f.label} ${f.rate_per_min < 0 ? 'falling' : 'rising'} ${Math.abs(f.rate_per_min)} ${f.unit}/min. At this rate it reaches the ${f.limit_name} limit (${f.limit_value}) in about ${etaText(f.eta_seconds)}.`,
+    }));
+  }
+  if (!chips.length) chips.push({ cls: 'calm', ic: ICON.OK, text: 'All readings nominal', title: '' });
+  const paint = (el, ch) => {
+    if (!ch) { setCls(el, 'chip'); setHTML(el, ''); el.removeAttribute('title'); el._ti = ''; return; }
+    setCls(el, 'chip ' + ch.cls);
+    setHTML(el, `<span class="ic">${ch.ic}</span>${esc(ch.text)}`);
+    if (el._ti !== ch.title) { el._ti = ch.title; el.title = ch.title; }
+  };
+  paint(ui.chip1, chips[0]);
+  paint(ui.chip2, chips[1]);
+  setText(ui.more, chips.length > 2 ? '+' + (chips.length - 2) : '');
+  ui.more.title = chips.length > 2 ? (chips.length - 2) + ' more alert' + (chips.length > 3 ? 's' : '') + ' (click the card)' : '';
+}
+
+function nowServer() { return Date.now() / 1000 + serverOffset; }
+
+/* ---------- needs-attention strip ---------- */
+const achips = {};
+function updateAttention(list) {
+  const order = { 'CRITICAL': 0, 'NO SIGNAL': 1, 'WARNING': 2 };
+  const bad = list.filter(a => a.status !== 'OK').sort((x, y) => order[x.status] - order[y.status] || natural(x.id, y.id));
+  const crit = bad.filter(a => a.status === 'CRITICAL').length, warn = bad.filter(a => a.status === 'WARNING').length;
+  const strip = $('attn');
+  setCls(strip, 'attn ' + (crit ? 'crit' : (warn || bad.length) ? 'warn' : 'calm'));
+  setText($('attnLabel'), bad.length ? 'NEEDS ATTENTION · ' + bad.length : 'ALL CREW NOMINAL');
+  const reporting = list.filter(a => a.status !== 'NO SIGNAL').length;
+  setText($('attnMeta'), list.length ? reporting + ' of ' + list.length + ' reporting' : '');
+
+  const shown = bad.slice(0, 4), wrap = $('attnChips');
+  const wantIds = shown.map(a => a.id);
+  Object.keys(achips).forEach(id => { if (!wantIds.includes(id)) { achips[id].remove(); delete achips[id]; } });
+  shown.forEach((a, idx) => {
+    let el = achips[a.id];
+    if (!el) { el = document.createElement('span'); el.dataset.id = a.id; achips[a.id] = el; }
+    const top = (a.abnormal || []).slice().sort((x, y) => (y.level === 'crit') - (x.level === 'crit'))[0];
+    const lvl = a.status === 'CRITICAL' ? 'crit' : a.status === 'WARNING' ? 'warn' : 'none';
+    setCls(el, 'achip ' + lvl);
+    const short = a.id.replace('Astronaut-', 'A');
+    const what = a.status === 'NO SIGNAL' ? 'no signal' : top ? `${top.short} ${fmtVal(top.key, top.value)}${top.unit === '°' || top.unit === '%' ? top.unit : ' ' + top.unit}` : a.status.toLowerCase();
+    setHTML(el, `<span class="ic">${ICON[a.status]}</span><b>${esc(short)}</b>${esc(what)}`);
+    if (wrap.children[idx] !== el) wrap.insertBefore(el, wrap.children[idx] || null);
+  });
+  let more = wrap.querySelector('.achip-more');
+  if (bad.length > 4) {
+    if (!more) { more = document.createElement('span'); more.className = 'attn-meta achip-more'; wrap.appendChild(more); }
+    setText(more, '+' + (bad.length - 4) + ' more');
+  } else if (more) more.remove();
+}
+
+/* ---------- header counts ---------- */
+function updateSummary(list) {
+  const el = $('summary');
+  if (!el._built) {
+    el._built = true;
+    el.innerHTML = [['OK', 'ok'], ['WARNING', 'warn'], ['CRITICAL', 'crit'], ['NO SIGNAL', 'none']]
+      .map(([n, v]) => `<span class="pill" style="color:var(--${v})">${n}<i data-n="${n}">0</i></span>`).join('');
+  }
+  el.querySelectorAll('i').forEach(i => setText(i, String(list.filter(a => a.status === i.dataset.n).length)));
+}
+
+/* ---------- alert log ---------- */
+function updateLog(events) {
+  $('noevents').style.display = events.length ? 'none' : 'block';
+  const sig = events.length + ':' + (events[0] ? events[0].time : '');
+  const el = $('log');
+  if (el._sig === sig) return;
+  el._sig = sig;
+  el.innerHTML = events.map(e =>
+    `<div class="ev"><time>${clock(e.time)}</time><span class="dot ${cls(e.status)}"></span>
+     <div><b>${esc(e.id)}</b>${esc(e.message)}</div></div>`).join('');
+}
+
+/* ---------- space weather strip ---------- */
+function renderWeather(w) {
+  if (!w) return;
+  const badge = $('wMode');
+  setText(badge, w.mode);
+  setCls(badge, 'wbadge ' + w.mode);
+  const tiles = $('wItems');
+  if (tiles.children.length !== w.items.length) {
+    tiles.innerHTML = w.items.map(() => '<div class="wi"><label></label><span></span><small></small></div>').join('');
+  }
+  w.items.forEach((i, n) => {
+    const t = tiles.children[n];
+    setCls(t, 'wi ' + i.level);
+    setText(t.children[0], i.label);
+    setText(t.children[1], i.value);
+    setText(t.children[2], i.unit);
+    t.title = `${i.label}: ${i.detail}  (source: ${i.source})`;
+  });
+  let meta = '', adv = null;
+  if (w.mode === 'LIVE') meta = 'NOAA SWPC + NASA DONKI · updated ' + w.age_seconds + ' s ago';
+  else if (w.mode === 'PARTIAL') meta = 'Only ' + w.feeds_ok + ' of ' + w.feeds_total + ' feeds answering · updated ' + w.age_seconds + ' s ago';
+  else if (w.mode === 'OFFLINE') meta = 'No feeds answering. Check the internet connection';
+  else if (w.mode === 'STALE') meta = 'Collector stopped or offline. Last update ' + Math.round((w.age_seconds || 0) / 60) + ' min ago';
+  else if (w.mode === 'SIMULATED') meta = 'Collector not running. Demo values, not real measurements';
+  else meta = 'Space weather unavailable';
+  if (w.advisory) adv = w.advisory;
+  const m = $('wMeta');
+  setCls(m, 'wmeta' + (adv ? ' adv ' + adv.level : ''));
+  setText(m, adv ? adv.title : meta);
+  m.title = adv ? adv.text : '';
+  setCls($('wx'), 'wx' + (adv ? ' ' + adv.level : ''));
+}
+
+/* ---------- critical alert sound ---------- */
+let audioCtx = null, soundOn = false, prevCritical = null;
+function beep() {
+  if (!soundOn || !audioCtx) return;
+  const t0 = audioCtx.currentTime;
+  [[660, 0], [520, 0.3]].forEach(([freq, delay]) => {
+    const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+    osc.type = 'sine'; osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, t0 + delay);
+    gain.gain.exponentialRampToValueAtTime(0.12, t0 + delay + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + delay + 0.45);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(t0 + delay); osc.stop(t0 + delay + 0.5);
+  });
+}
+function chime(list) {
+  const ids = list.filter(a => a.status === 'CRITICAL').map(a => a.id);
+  if (prevCritical !== null && ids.some(id => !prevCritical.includes(id))) beep();
+  prevCritical = ids;
+}
+
+/* ---------- detail popup ---------- */
+let detailBusy = false;
+async function renderDetail() {
+  if (!detailId || !byId[detailId] || detailBusy) return;
+  detailBusy = true;
+  try {
+    const a = byId[detailId], d = a.data;
+    setText($('dName'), a.id);
+    const b = $('dBadge');
+    setText(b, a.status); setCls(b, 'badge ' + cls(a.status));
+    const al = $('dAlerts');
+    setCls(al, 'alerts' + (a.status === 'CRITICAL' ? ' crit' : ''));
+    setHTML($('dForecast'), forecastHTML(a));
+    setHTML(al, a.alerts.length ? a.alerts.map(esc).join('<br>') : '<span style="color:var(--muted)">No active alerts</span>');
+
+    let hist = [];
+    try { hist = await (await fetch('/api/history/' + encodeURIComponent(detailId))).json(); } catch (e) { return; }
+    if (!detailId) return;
+    const lim = state.limits;
+    const has = k => hist.some(p => p[k] !== null && p[k] !== undefined);
+    $('hrBlock').style.display = has('heart_rate_bpm') ? '' : 'none';
+    $('btBlock').style.display = has('body_temp_c') ? '' : 'none';
+    $('bpBlock').style.display = has('bp_systolic') ? '' : 'none';
+    $('btTag').style.display = d.vitals_simulated ? '' : 'none';
+    $('bpTag').style.display = d.vitals_simulated ? '' : 'none';
+    drawChart($('chT'), hist, 'temperature_c', { limits: lim.temperature_c });
+    drawChart($('chP'), hist, 'pressure_hpa', { limits: lim.pressure_hpa });
+    if (has('heart_rate_bpm')) drawChart($('chH'), hist, 'heart_rate_bpm', { limits: lim.heart_rate_bpm });
+    if (has('body_temp_c')) drawChart($('chB'), hist, 'body_temp_c', { limits: lim.body_temp_c });
+    if (has('bp_systolic')) drawChart($('chS'), hist, 'bp_systolic', { limits: lim.bp_systolic });
+
+    const sim = d.vitals_simulated ? ' (simulated)' : '';
+    setHTML($('dTable'),
+      `<tr><td>Suit temperature</td><td>${num(d.temperature_c, 1)} &deg;C</td></tr>
+       <tr><td>Suit pressure</td><td>${num(d.pressure_hpa, 1)} hPa</td></tr>
+       <tr><td>Heart rate${sim}</td><td>${d.heart_rate_bpm !== undefined ? Math.round(d.heart_rate_bpm) + ' bpm' : '-'}</td></tr>
+       <tr><td>Body temperature${sim}</td><td>${d.body_temp_c !== undefined ? num(d.body_temp_c, 2) + ' &deg;C' : '-'}</td></tr>
+       <tr><td>Blood pressure${sim}</td><td>${d.bp_systolic !== undefined && d.bp_diastolic !== undefined ? Math.round(d.bp_systolic) + '/' + Math.round(d.bp_diastolic) + ' mmHg' : '-'}</td></tr>
+       <tr><td>Blood oxygen${sim}</td><td>${d.spo2_pct !== undefined ? num(d.spo2_pct, 1) + ' %' : '-'}</td></tr>
+       <tr><td>Suit humidity</td><td>${d.humidity_pct !== undefined ? num(d.humidity_pct, 0) + ' %' : '-'}</td></tr>
+       <tr><td>Peak acceleration (1 g = gravity)</td><td>${d.peak_acceleration_g !== undefined ? num(d.peak_acceleration_g, 2) + ' g' : '-'}</td></tr>
+       <tr><td>Sensor data quality</td><td>${d.quality_score !== undefined ? Math.round(d.quality_score * 100) + ' %' : '-'}</td></tr>
+       <tr><td>Pitch</td><td>${d.pitch !== undefined ? Math.round(tilt(d.pitch)) + '&deg;' : '-'}</td></tr>
+       <tr><td>Roll</td><td>${d.roll !== undefined ? Math.round(tilt(d.roll)) + '&deg;' : '-'}</td></tr>
+       <tr><td>Yaw (heading)</td><td>${d.yaw !== undefined ? Math.round(d.yaw) + '&deg;' : '-'}</td></tr>
+       <tr><td>Data source</td><td>${d.data_source === 'pi' ? 'Real Raspberry Pi' : d.data_source === 'sim' ? 'Simulated astronaut' : '-'}</td></tr>
+       <tr><td>Last update</td><td>${esc(a.age_seconds)} s ago</td></tr>`);
+    setHTML($('dTasks'), taskList(d));
+  } finally { detailBusy = false; }
+}
+function openDetail(id) {
+  detailId = id;
+  lastFocus = document.activeElement;
+  const m = $('modal');
+  m.classList.add('open'); m.setAttribute('aria-hidden', 'false');
+  renderDetail();
+}
+function closeDetail() {
+  detailId = null;
+  const m = $('modal');
+  m.classList.remove('open'); m.setAttribute('aria-hidden', 'true');
+  if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+}
+
+/* ---------- refresh loop ---------- */
+async function refresh() {
+  try {
+    const res = await fetch('/api/state');
+    state = await res.json();
+    const off = state.server_time - Date.now() / 1000;
+    serverOffset = serverOffset === 0 ? off : serverOffset + (off - serverOffset) * 0.2;
+    byId = {};
+    state.astronauts.forEach(a => { byId[a.id] = a; });
+    const list = state.astronauts;
+    const nowMs = Date.now();
+
+    renderWeather(state.space_weather);
+    chime(list);
+
+    const grid = $('grid');
+    const empty = $('empty');
+    empty.style.display = list.length ? 'none' : 'block';
+    empty.textContent = 'Waiting for astronaut data...';
+
+    // build cards for new astronauts and keep the order fixed (Astronaut-1, 2, 3 ...)
+    const ids = list.map(a => a.id).sort(natural);
+    const fresh = ids.filter(id => !cards[id]);
+    list.forEach(a => {
+      const ui = cards[a.id] || buildCard(a.id);
+      ui.trend = a.trend;
+      updateCard(a, nowMs);
+    });
+    if (fresh.length) {
+      ids.forEach(id => grid.appendChild(cards[id].el));
+      const cols = Math.min(5, Math.max(1, ids.length)), rows = Math.ceil(ids.length / cols);
+      grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+      grid.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`;
+    }
+    updateAttention(list);
+    updateSummary(list);
+    updateLog(state.events);
+    renderDetail();
+    if (reduceMotion) paintSparks();
+  } catch (err) {
+    const empty = $('empty');
+    empty.style.display = 'block';
+    empty.textContent = 'Cannot reach the server...';
+  }
+}
+async function loop() {
+  await refresh();
+  setTimeout(loop, 1000);
+}
+
+/* smooth graph animation: redraws about 30 times a second so the lines glide */
+let lastPaint = 0;
+function paintSparks() { const T = nowServer(); Object.values(cards).forEach(ui => drawSpark(ui, T)); }
+function frame(ts) {
+  if (!reduceMotion && ts - lastPaint > 30) { lastPaint = ts; paintSparks(); }
+  requestAnimationFrame(frame);
+}
+
+function tickClock() {
+  const n = new Date();
+  setText($('clock'), 'LOCAL ' + n.toLocaleTimeString() + '  ·  UTC ' + n.toISOString().substr(11, 8));
+}
+
+/* ---------- buttons and clicks ---------- */
+$('grid').addEventListener('click', e => { const el = e.target.closest('.card'); if (el) openDetail(el.dataset.id); });
+$('grid').addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('card')) { e.preventDefault(); openDetail(e.target.dataset.id); }
+});
+$('attnChips').addEventListener('click', e => { const el = e.target.closest('.achip'); if (el) openDetail(el.dataset.id); });
+$('closeBtn').addEventListener('click', closeDetail);
+$('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeDetail(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && detailId) closeDetail(); });
+$('soundBtn').addEventListener('click', e => {
+  if (!soundOn) {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx.resume();
+    soundOn = true;
+    beep();                       // short test tone so you know it works
+  } else { soundOn = false; }
+  e.target.textContent = 'Sound: ' + (soundOn ? 'on' : 'off');
+});
+$('themeBtn').addEventListener('click', () => {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem('theme', next); } catch (e) {}
+  readPalette();
+});
+try { const saved = localStorage.getItem('theme'); if (saved) document.documentElement.dataset.theme = saved; } catch (e) {}
+
+readPalette();
+tickClock();
+setInterval(tickClock, 1000);
+requestAnimationFrame(frame);
+loop();
+</script>
+</body>
+</html>
