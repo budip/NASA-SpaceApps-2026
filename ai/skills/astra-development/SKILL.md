@@ -17,12 +17,14 @@ Before acting:
 2. Read `ai/AGENTS.md` and obey its offline, interface, evidence, security, and
    hardware-safety constraints.
 3. Read only the relevant owner guide:
-   - `team/BUDI.md` for backend, database, analysis, configuration, release, or
-     integration work;
-   - `team/RAPH.md` for CYD firmware, networking, display, or recovery work;
-   - `team/TYEKI.md` for Sense HAT, sensor adapters, power, mounting, or anomaly
-     trigger work;
-   - `team/ALEX.md` for wording, testing, evidence, demo, or presentation work.
+   - `team/BUDI.md` for AI, anomaly detection, local Gemma, shared interfaces,
+     release, or integration work;
+   - `team/RALPH.md` for CYD firmware, display, 3D printing, enclosure, or
+     recovery work;
+   - `team/TYEKI.md` for Central Station, control-center dashboards, monitoring,
+     or operator messaging work;
+   - `team/ALEX.md` for user experience, testing, evidence, demo, or
+     presentation work.
 
 Read `team/SWAGGER_API_GUIDE.md` when changing an endpoint, payload, Central
 Station integration, suit or biometric field, task, message flow, or local chat

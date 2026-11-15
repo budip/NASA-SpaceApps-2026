@@ -2,7 +2,7 @@
 
 These instructions apply to work inside `ai/`. Treat the repository root
 `README.md` as the product and integration source of truth. Read the relevant
-guide in `team/` before changing a component owned by Budi, Raph, Tyeki, or
+guide in `team/` before changing a component owned by Budi, Ralph, Tyeki, or
 Alex.
 
 ## Mission
